@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         }
 
         // 🚨 防彈版網址拼接：絕對不會漏掉 ID
-        const spotifyUrl = 'https://api.spotify.com/v1/playlists/' + process.env.SPOTIFY_PLAYLIST_ID + '/tracks';
+        const spotifyUrl = 'https://api.spotify.com/v1/playlists/0KlVPV7rXkENNV73zqacv7/tracks';
 
         // 將歌曲塞進官方歌單
         const spotifyRes = await fetch(spotifyUrl, {
