@@ -1,18 +1,11 @@
 'use client';
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// 連接 Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function Home() {
   const [link, setLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     if (!link) {
       alert('老闆，請先貼上歌曲連結喔！🏃‍♂️');
       return;
@@ -32,28 +25,12 @@ const handleSubmit = async () => {
         alert(`太棒了！成功收到連結：\n${link}\n\n已經加入香港跑友精選庫，Spotify 歌單也同步更新囉！`);
         setLink('');
       } else {
-        alert('哎呀，傳送失敗，請稍後再試！');
+        alert('哎呀，傳送失敗，請檢查 API 設定或稍後再試！');
       }
     } catch (error) {
       alert('網路發生錯誤，請檢查連線。');
     }
     setIsLoading(false);
-  };
-    
-    // 寫入 Supabase 資料庫
-    const { error } = await supabase
-      .from('songs')
-      .insert([{ url: link, platform: link.includes('spotify') ? 'Spotify' : 'Apple Music' }]);
-
-    setIsLoading(false);
-
-    if (error) {
-      alert('哎呀，傳送失敗，請稍後再試！');
-      console.error(error);
-    } else {
-      alert(`太棒了！成功收到連結：\n${link}\n\n已經加入香港跑友精選庫！`);
-      setLink('');
-    }
   };
 
   return (
