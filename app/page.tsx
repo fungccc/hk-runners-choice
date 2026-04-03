@@ -12,13 +12,33 @@ export default function Home() {
   const [link, setLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!link) {
       alert('老闆，請先貼上歌曲連結喔！🏃‍♂️');
       return;
     }
     
     setIsLoading(true);
+    const platform = link.includes('spotify') ? 'Spotify' : 'Apple Music';
+    
+    try {
+      const res = await fetch('/api/add-song', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: link, platform })
+      });
+      
+      if (res.ok) {
+        alert(`太棒了！成功收到連結：\n${link}\n\n已經加入香港跑友精選庫，Spotify 歌單也同步更新囉！`);
+        setLink('');
+      } else {
+        alert('哎呀，傳送失敗，請稍後再試！');
+      }
+    } catch (error) {
+      alert('網路發生錯誤，請檢查連線。');
+    }
+    setIsLoading(false);
+  };
     
     // 寫入 Supabase 資料庫
     const { error } = await supabase
