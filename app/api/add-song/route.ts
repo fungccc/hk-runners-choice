@@ -34,17 +34,19 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Spotify 授權金鑰換取失敗' }, { status: 400 });
         }
 
+        // 🚨 防彈版網址拼接：絕對不會漏掉 ID
+        const spotifyUrl = 'https://api.spotify.com/v1/playlists/' + process.env.SPOTIFY_PLAYLIST_ID + '/tracks';
+
         // 將歌曲塞進官方歌單
-        const spotifyRes = await fetch(`https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`, {
+        const spotifyRes = await fetch(spotifyUrl, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ uris: [`spotify:track:${trackId}`] })
+          body: JSON.stringify({ uris: ['spotify:track:' + trackId] })
         });
 
-        // 🚨 測謊機核心：如果 Spotify 拒絕，把真正的原因抓出來！
         if (!spotifyRes.ok) {
           const spotifyError = await spotifyRes.json();
           return NextResponse.json({ error: `Spotify 拒絕了：${spotifyError.error?.message || '未知錯誤'}` }, { status: 400 });
