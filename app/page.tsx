@@ -21,11 +21,14 @@ export default function Home() {
         body: JSON.stringify({ url: link, platform })
       });
       
+      const data = await res.json(); // 解析後台傳來的錯誤訊息
+      
       if (res.ok) {
         alert(`太棒了！成功收到連結：\n${link}\n\n已經加入香港跑友精選庫，Spotify 歌單也同步更新囉！`);
         setLink('');
       } else {
-        alert('哎呀，傳送失敗，請檢查 API 設定或稍後再試！');
+        // 🚨 這裡會直接告訴你為什麼失敗！
+        alert(`哎呀，傳送失敗！\n系統抓到的原因：${data.error}`);
       }
     } catch (error) {
       alert('網路發生錯誤，請檢查連線。');
