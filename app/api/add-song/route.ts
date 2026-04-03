@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const { url, platform } = await req.json();
 
-    // 1. 存入 Supabase 資料庫
+    // 1. 存入 Supabase
     await supabase.from('songs').insert([{ url, platform }]);
 
     // 2. 如果是 Spotify，自動加進歌單
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       if (trackIdMatch) {
         const trackId = trackIdMatch[1];
         
-        // 用你的 Refresh Token 換取當下可用的 Access Token
+        // 換取代幣
         const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
           method: 'POST',
           headers: {
@@ -30,8 +30,12 @@ export async function POST(req: Request) {
         });
         const tokenData = await tokenRes.json();
         
-        // 將歌曲塞進你的官方歌單
-        await fetch(`https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`, {
+        if (!tokenData.access_token) {
+          return NextResponse.json({ error: 'Spotify 授權金鑰換取失敗' }, { status: 400 });
+        }
+
+        // 將歌曲塞進官方歌單
+        const spotifyRes = await fetch(`https://api.spotify.com/v1/playlists/${process.env.SPOTIFY_PLAYLIST_ID}/tracks`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`,
@@ -39,10 +43,18 @@ export async function POST(req: Request) {
           },
           body: JSON.stringify({ uris: [`spotify:track:${trackId}`] })
         });
+
+        // 🚨 測謊機核心：如果 Spotify 拒絕，把真正的原因抓出來！
+        if (!spotifyRes.ok) {
+          const spotifyError = await spotifyRes.json();
+          return NextResponse.json({ error: `Spotify 拒絕了：${spotifyError.error?.message || '未知錯誤'}` }, { status: 400 });
+        }
+      } else {
+        return NextResponse.json({ error: '網址格式不對，找不到歌曲 ID' }, { status: 400 });
       }
     }
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: '處理失敗' }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: `系統錯誤：${error.message}` }, { status: 500 });
   }
 }
